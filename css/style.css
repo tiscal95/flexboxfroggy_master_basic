@@ -277,7 +277,7 @@ pre {
   border: 2px solid transparent;
   border-radius: 50%;
   text-align: center;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .level-marker.current,
@@ -385,6 +385,20 @@ button {
   appearance: none;
 }
 
+#editor-buttons {
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+}
+
+#next, #check {
+padding-top: 0.3em;
+}
+
+#check {
+background-color: #298a2b;
+}
+
 button:active {
   outline: none;
 }
@@ -393,19 +407,9 @@ button:not(.disabled):hover {
   background-color: #F12D22;
 }
 
-#next {
-  position: absolute;
-  right: 1em;
-  bottom: 1em;
-  padding-top: 0.3em;
-}
-
-.animation {
-  animation: tada 1s, pulse 2s infinite 2s;
-}
-
-#next.disabled {
+#next.disabled, #check.disabled {
   opacity: 0.5;
+  pointer-events: none;
 }
 
 .credits {

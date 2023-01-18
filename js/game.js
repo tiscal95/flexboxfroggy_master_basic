@@ -36,6 +36,16 @@ var game = {
   },
 
   setHandlers: function() {
+    $('#check').on('click', function() {
+      game.check();
+      if ($('#next').hasClass('disabled')) {
+        if (!$('.frog').hasClass('animated')) {
+          game.tryagain();
+        }
+        return;
+      }
+    });
+
     $('#next').on('click', function() {
       $('#code').focus();
 
@@ -86,11 +96,7 @@ var game = {
           }
         }
       }
-    }).on('input', game.debounce(game.check, 500))
-    .on('input', function() {
-      game.changed = true;
-      $('#next').removeClass('animated animation').addClass('disabled');
-    });
+    })
 
     $('#editor').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
       $(this).removeClass();
@@ -432,6 +438,7 @@ var game = {
 
       $('[data-level=' + game.level + ']').addClass('solved');
       $('#next').removeClass('disabled').addClass('animated animation');
+      $('#check').addClass('disabled');
     } else {
       ga('send', {
         hitType: 'event',
@@ -442,6 +449,7 @@ var game = {
 
       game.changed = true;
       $('#next').removeClass('animated animation').addClass('disabled');
+      $('#check').removeClass('disabled');
     }
   },
 
@@ -451,7 +459,7 @@ var game = {
   },
 
   tryagain: function() {
-    $('#editor').addClass('animated shake');
+    $('#editor').addClass('animated');
   },
 
   win: function() {
@@ -489,21 +497,6 @@ var game = {
 
       $('#' + label).text(text);
     });
-  },
-
-  debounce: function(func, wait, immediate) {
-    var timeout;
-    return function() {
-      var context = this, args = arguments;
-      var later = function() {
-        timeout = null;
-        if (!immediate) func.apply(context, args);
-      };
-      var callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow) func.apply(context, args);
-    };
   },
 
   writeCSS: function(pName, pValue){

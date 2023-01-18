@@ -25,18 +25,12 @@
           <h1 class="title">Flexbox Froggy</h1>
         </div>
         <div id="level-counter">
-          <span class="arrow left">
-            <span class="triangle"></span>
-          </span>
           <span id="level-indicator">
             <span id="labelLevel" class="translate">Level</span>
             <span class="current">1</span>
             <span id="labelOf" class="translate">of</span>
             <span class="total">1</span>
             <span class="caret">▾</span>
-          </span>
-          <span class="arrow right">
-            <span class="triangle"></span>
           </span>
           <div id="levelsWrapper" class="tooltip">
             <div id="levels"></div>
@@ -52,7 +46,10 @@
           <textarea id="code" autofocus autocapitalize="none"></textarea>
           <pre id="after"></pre>
         </div>
-        <button id="next" class="translate">Next</button>
+        <div id="editor-buttons">
+          <button id="check" class="translate">Check</button>
+          <button id="next" class="translate">Next</button>
+        </div>
       </div>
       <div id="share">
         <div class="games">
@@ -81,10 +78,6 @@
       <div class="bsa-custom"></div>
 
       <div class="credits">
-        <span id="labelFooter" class="translate">Flexbox Froggy is created by</span>
-        <a href="https://codepip.com">Codepip</a> •
-        <a href="https://github.com/thomaspark/flexboxfroggy/">GitHub</a> •
-        <a href="https://twitter.com/playcodepip">Twitter</a> •
         <span id="settings">
           <span id="labelSettings" class="toggle translate">Settings</span>
           <span class="tooltip">
@@ -167,9 +160,6 @@
             </section>
           </span>
         </span>
-      </div>
-      <div class="credits">
-        <span id="gridGarden" class="translate">Want to learn CSS grid? Play</span> <a href="https://codepip.com/games/grid-garden/">Grid Garden</a>.
       </div>
     </section>
     <section id="view">
