@@ -1,4 +1,25 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyAKqE7MdhOnRzXyjtP2wQxQ_iR73h0IAAs",
+  authDomain: "flexboxfroggymaster.firebaseapp.com",
+  projectId: "flexboxfroggymaster",
+  storageBucket: "flexboxfroggymaster.appspot.com",
+  messagingSenderId: "604293471792",
+  appId: "1:604293471792:web:8f008684257e389b6b57f5"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 var game = {
+  pageStartTimes: (localStorage.pageStartTimes && JSON.parse(localStorage.pageStartTimes)) || {},
+  pageEndTimes: (localStorage.pageEndTimes && JSON.parse(localStorage.pageEndTimes)) || {},
+  levelStartTimes: (localStorage.levelStartTimes && JSON.parse(localStorage.levelStartTimes)) || {},
+  levelEndTimes: (localStorage.levelEndTimes && JSON.parse(localStorage.levelEndTimes)) || {},
+  pageTimes: (localStorage.pageTimes && JSON.parse(localStorage.pageTimes)) || {},
+  levelTimes: (localStorage.levelTimes && JSON.parse(localStorage.levelTimes)) || {},
+  session: parseInt(localStorage.level, 10) || 0,
+  // original
   colorblind: (localStorage.colorblind && JSON.parse(localStorage.colorblind)) || 'false',
   language: window.location.hash.substring(1) || 'en',
   difficulty: 'easy',
@@ -12,7 +33,7 @@ var game = {
   start: function() {
     // navigator.language can include '-'
     // ref: https://developer.mozilla.org/en-US/docs/Web/API/NavigatorLanguage/language
-    var requestLang = window.navigator.language.split('-')[0];
+    var requestLang = 'en';
     if (window.location.hash === '' && requestLang !== 'en' && messages.languageActive.hasOwnProperty(requestLang)) {
       game.language = requestLang;
       window.location.hash = requestLang;
@@ -26,7 +47,7 @@ var game = {
     $('input[value="' + game.colorblind + '"]', '#colorblind').prop('checked', true);
 
     if (!localStorage.user) {
-      game.user = '' + (new Date()).getTime() + Math.random().toString(36).slice(1);
+      game.user = '' + (new Date()).toISOString();
       localStorage.setItem('user', game.user);
     }
 
@@ -57,11 +78,16 @@ var game = {
         return;
       }
 
+      const level = levels[game.level]
+      game.pageEndTimes[level.name] = new Date();
+      game.pageTimes[level.name] = new Date(game.pageEndTimes[level.name]) - new Date(game.pageStartTimes[level.name])
+
       $(this).removeClass('animated animation');
       $('.frog').addClass('animated bounceOutUp');
       $('.arrow, #next').addClass('disabled');
 
       setTimeout(function() {
+        game.saveToDatabase();
         if (game.level >= levels.length - 1) {
           game.win();
         } else {
@@ -107,6 +133,14 @@ var game = {
       var r = confirm(warningReset);
 
       if (r) {
+        game.session++;
+        game.pageStartTimes = {},
+        game.pageEndTimes = {},
+        game.levelStartTimes = {},
+        game.levelEndTimes = {},
+        game.pageTimes = {},
+        game.levelTimes = {},
+
         game.level = 0;
         game.answers = {};
         game.solved = [];
@@ -171,7 +205,7 @@ var game = {
 
     $('body').on('click', function() {
       $('.tooltip').hide();
-      clickedCode = null;
+      game.clickedCode = null;
     });
 
     $('.tooltip, .toggle, #level-indicator').on('click', function(e) {
@@ -180,6 +214,13 @@ var game = {
 
     $(window).on('beforeunload', function() {
       game.saveAnswer();
+      localStorage.setItem('session', JSON.stringify(game.session));
+      localStorage.setItem('levelStartTimes', JSON.stringify(game.levelStartTimes));
+      localStorage.setItem('levelEndTimes', JSON.stringify(game.levelEndTimes));
+      localStorage.setItem('levelTimes', JSON.stringify(game.levelTimes));
+      localStorage.setItem('pageStartTimes', JSON.stringify(game.pageStartTimes));
+      localStorage.setItem('pageEndTimes', JSON.stringify(game.pageEndTimes));
+      localStorage.setItem('pageTimes', JSON.stringify(game.pageTimes));
       localStorage.setItem('level', game.level);
       localStorage.setItem('answers', JSON.stringify(game.answers));
       localStorage.setItem('solved', JSON.stringify(game.solved));
@@ -266,6 +307,7 @@ var game = {
   },
 
   loadLevel: function(level) {
+    game.setTimers();
     $('#editor').show();
     $('#share').hide();
     $('#background, #pond').removeClass('wrap').attr('style', '').empty();
@@ -425,6 +467,8 @@ var game = {
     });
 
     if (correct) {
+      game.levelEndTimer();
+      game.saveToDatabase();
       ga('send', {
         hitType: 'event',
         eventCategory: level.name,
@@ -535,7 +579,59 @@ var game = {
 
     $('#code').val(content);
     $('#code').focus();
-  }
+  },
+
+  levelEndTimer: function() {
+    const level = levels[game.level];
+    if(!game.levelSolved()) {
+      game.levelEndTimes[level.name] = new Date();
+      game.levelTimes[level.name] = new Date(game.levelEndTimes[level.name]) - new Date(game.levelStartTimes[level.name])
+    }
+  },
+
+  setTimers: function() {
+    const level = levels[game.level];
+    if (!game.pageStartTimes[level.name]) {
+      game.pageStartTimes[level.name] = new Date();
+      game.levelStartTimes[level.name] = new Date();
+    }
+  },
+
+  levelSolved: function() {
+    const level = levels[game.level]
+    return $.inArray(level.name, game.solved) !== -1
+  },
+
+  saveToDatabase: function() {
+    //save to database
+    db.collection("basic-version").doc(game.user).get().then((doc) => {
+      if(doc.data()) {
+        let sessionsData = doc.data().sessions;
+        sessionsData[game.session] = {
+          pageTimes: game.pageTimes,
+          levelTimes: game.levelTimes
+        };
+        db.collection("basic-version").doc(game.user).set({ sessions: sessionsData })
+        .then((docRef) => {
+          console.log("Document written.");
+        })
+        .catch((error) => {
+          console.error("Error adding document: ", error);
+        });
+      } else {
+        db.collection("basic-version").doc(game.user).set({ sessions: [{
+          pageTimes: game.pageTimes,
+          levelTimes: game.levelTimes
+        }]})
+        .then((docRef) => {
+          console.log("Document written.");
+        })
+        .catch((error) => {
+          console.error("Error adding document: ", error);
+        });
+      }
+    });
+  },
 };
 
 $(document).ready(function() {
