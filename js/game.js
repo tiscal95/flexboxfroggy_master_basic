@@ -18,7 +18,7 @@ var game = {
   levelEndTimes: (localStorage.levelEndTimes && JSON.parse(localStorage.levelEndTimes)) || {},
   pageTimes: (localStorage.pageTimes && JSON.parse(localStorage.pageTimes)) || {},
   levelTimes: (localStorage.levelTimes && JSON.parse(localStorage.levelTimes)) || {},
-  session: parseInt(localStorage.level, 10) || 0,
+  session: parseInt(localStorage.session, 10) || 0,
   // original
   colorblind: (localStorage.colorblind && JSON.parse(localStorage.colorblind)) || 'false',
   language: window.location.hash.substring(1) || 'en',
@@ -48,7 +48,6 @@ var game = {
 
     if (!localStorage.user) {
       game.user = '' + (new Date()).toISOString();
-      localStorage.setItem('user', game.user);
     }
 
     this.setHandlers();
@@ -79,8 +78,10 @@ var game = {
       }
 
       const level = levels[game.level]
-      game.pageEndTimes[level.name] = new Date();
-      game.pageTimes[level.name] = new Date(game.pageEndTimes[level.name]) - new Date(game.pageStartTimes[level.name])
+      if(!game.pageTimes[level.name]) {
+        game.pageEndTimes[level.name] = new Date();
+        game.pageTimes[level.name] = new Date(game.pageEndTimes[level.name]) - new Date(game.pageStartTimes[level.name])
+      }
 
       $(this).removeClass('animated animation');
       $('.frog').addClass('animated bounceOutUp');
@@ -225,6 +226,7 @@ var game = {
       localStorage.setItem('answers', JSON.stringify(game.answers));
       localStorage.setItem('solved', JSON.stringify(game.solved));
       localStorage.setItem('colorblind', JSON.stringify(game.colorblind));
+      localStorage.setItem('user', game.user);
     }).on('hashchange', function() {
       game.language = window.location.hash.substring(1) || 'en';
       game.translate();
