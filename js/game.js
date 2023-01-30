@@ -19,6 +19,7 @@ var game = {
   pageTimes: (localStorage.pageTimes && JSON.parse(localStorage.pageTimes)) || {},
   levelTimes: (localStorage.levelTimes && JSON.parse(localStorage.levelTimes)) || {},
   session: parseInt(localStorage.session, 10) || 0,
+  nickname: (localStorage.nickname && JSON.parse(localStorage.nickname)) || '',
   // original
   colorblind: (localStorage.colorblind && JSON.parse(localStorage.colorblind)) || 'false',
   language: window.location.hash.substring(1) || 'en',
@@ -41,10 +42,15 @@ var game = {
 
     game.translate();
     $('#level-counter .total').text(levels.length);
+    $('#highscoreNameInput').attr('placeholder', messages.placeholder[game.language]);
     $('#editor').show();
     $('#share').hide();
     $('#language').val(game.language);
     $('input[value="' + game.colorblind + '"]', '#colorblind').prop('checked', true);
+
+    if(!localStorage.nickname || game.nickname == '') {
+      $('#layover-nickname').show();
+    }
 
     if (!localStorage.user) {
       game.user = '' + (new Date()).toISOString();
@@ -56,6 +62,19 @@ var game = {
   },
 
   setHandlers: function() {
+    $('#highscoreNameInput').on('input', function() {
+      if($('#highscoreNameInput')[0].value.length > 0 && $('#highscoreNameInput')[0].checkValidity()) {
+        $('#highscoreFormSubmit').attr('disabled', false);
+      } else {
+        $('#highscoreFormSubmit').attr('disabled', true);
+      }
+    });
+
+    $('#highscoreFormSubmit').on('click', function() {
+      game.nickname = $('#highscoreNameInput')[0].value;
+      $('#layover-nickname').hide();
+    });
+
     $('#check').on('click', function() {
       game.check();
       if ($('#next').hasClass('disabled')) {
@@ -132,6 +151,7 @@ var game = {
     $('#labelReset').on('click', function() {
       var warningReset = messages.warningReset[game.language] || messages.warningReset.en;
       var r = confirm(warningReset);
+      game.saveToDatabase();
 
       if (r) {
         game.session++;
@@ -141,11 +161,14 @@ var game = {
         game.levelEndTimes = {},
         game.pageTimes = {},
         game.levelTimes = {},
+        game.nickname = '',
 
         game.level = 0;
         game.answers = {};
         game.solved = [];
         game.loadLevel(levels[0]);
+
+        $('#layover-nickname').show();
 
         $('.level-marker').removeClass('solved');
       }
@@ -215,6 +238,7 @@ var game = {
 
     $(window).on('beforeunload', function() {
       game.saveAnswer();
+      localStorage.setItem('nickname', JSON.stringify(game.nickname));
       localStorage.setItem('session', JSON.stringify(game.session));
       localStorage.setItem('levelStartTimes', JSON.stringify(game.levelStartTimes));
       localStorage.setItem('levelEndTimes', JSON.stringify(game.levelEndTimes));

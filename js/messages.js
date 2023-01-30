@@ -563,5 +563,13 @@ var messages = {
     'tr': 'Uzman - Yol Tarifi Yok & Rastgele Seviyeler',
     'gl': 'Experto - Sen pistas e con niveis aleatorios',
     'uk': 'Експерт - Без підказок та випадкові рівні'
+  },
+  highscoreFormSubmit: {
+    'en': 'Submit',
+    'de': 'Senden',
+  },
+  placeholder: {
+    'en': 'Enter your FHS number.',
+    'de': 'Gib deine FHS nummer ein.',
   }
 };
