@@ -571,5 +571,9 @@ var messages = {
   placeholder: {
     'en': 'Enter your FHS number.',
     'de': 'Gib deine FHS nummer ein.',
+  },
+  replay: {
+    'en': 'Play again!',
+    'de': 'Nochmal spielen!',
   }
 };

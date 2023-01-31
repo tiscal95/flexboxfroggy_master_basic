@@ -39,6 +39,15 @@ a[href="#fa"] {
   align-items: center;
 }
 
+button#check:not(.disabled):hover {
+  background-color: #3fa142;
+}
+
+#replay {
+  display: block;
+  margin: 0 auto;
+}
+
 #highscore-form {
   margin-top: 4em;
   width: 100%;

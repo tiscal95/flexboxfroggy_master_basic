@@ -18,6 +18,7 @@ var game = {
   levelEndTimes: (localStorage.levelEndTimes && JSON.parse(localStorage.levelEndTimes)) || {},
   pageTimes: (localStorage.pageTimes && JSON.parse(localStorage.pageTimes)) || {},
   levelTimes: (localStorage.levelTimes && JSON.parse(localStorage.levelTimes)) || {},
+  checks: (localStorage.checks && JSON.parse(localStorage.checks)) || {},
   session: parseInt(localStorage.session, 10) || 0,
   nickname: (localStorage.nickname && JSON.parse(localStorage.nickname)) || '',
   // original
@@ -71,11 +72,17 @@ var game = {
     });
 
     $('#highscoreFormSubmit').on('click', function() {
-      game.nickname = $('#highscoreNameInput')[0].value;
+      game.nickname = $('#highscoreNameInput')[0].value + '_' + (new Date()).toISOString();
       $('#layover-nickname').hide();
     });
 
     $('#check').on('click', function() {
+      const level = levels[game.level]
+      if (game.checks[level.name]) {
+        game.checks[level.name] = game.checks[level.name] += 1;
+      } else {
+        game.checks[level.name] = 1;
+      }
       game.check();
       if ($('#next').hasClass('disabled')) {
         if (!$('.frog').hasClass('animated')) {
@@ -118,7 +125,9 @@ var game = {
 
     $('#code').on('keydown', function(e) {
       if (e.keyCode === 13) {
-
+        if(!game.levelSolved()) {
+          game.check();
+        }
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           game.check();
@@ -136,7 +145,6 @@ var game = {
 
           if (codeLength === trimLength) {
             e.preventDefault();
-            $('#next').click();
           } else {
             $('#code').focus().val('').val(trim);
           }
@@ -148,7 +156,8 @@ var game = {
       $(this).removeClass();
     });
 
-    $('#labelReset').on('click', function() {
+    $('#labelReset, #replay').on('click', function() {
+      $('#replay').hide();
       var warningReset = messages.warningReset[game.language] || messages.warningReset.en;
       var r = confirm(warningReset);
       game.saveToDatabase();
@@ -161,14 +170,12 @@ var game = {
         game.levelEndTimes = {},
         game.pageTimes = {},
         game.levelTimes = {},
-        game.nickname = '',
+        game.checks = {},
 
         game.level = 0;
         game.answers = {};
         game.solved = [];
         game.loadLevel(levels[0]);
-
-        $('#layover-nickname').show();
 
         $('.level-marker').removeClass('solved');
       }
@@ -240,6 +247,7 @@ var game = {
       game.saveAnswer();
       localStorage.setItem('nickname', JSON.stringify(game.nickname));
       localStorage.setItem('session', JSON.stringify(game.session));
+      localStorage.setItem('checks', JSON.stringify(game.checks));
       localStorage.setItem('levelStartTimes', JSON.stringify(game.levelStartTimes));
       localStorage.setItem('levelEndTimes', JSON.stringify(game.levelEndTimes));
       localStorage.setItem('levelTimes', JSON.stringify(game.levelTimes));
@@ -533,6 +541,7 @@ var game = {
   },
 
   win: function() {
+    $('#replay').show();
     var solution = $('#code').val();
 
     this.loadLevel(levelWin);
@@ -630,14 +639,15 @@ var game = {
 
   saveToDatabase: function() {
     //save to database
-    db.collection("basic-version").doc(game.user).get().then((doc) => {
+    db.collection("basic-version").doc(game.nickname).get().then((doc) => {
       if(doc.data()) {
         let sessionsData = doc.data().sessions;
         sessionsData[game.session] = {
           pageTimes: game.pageTimes,
-          levelTimes: game.levelTimes
+          levelTimes: game.levelTimes,
+          checks: game.checks
         };
-        db.collection("basic-version").doc(game.user).set({ sessions: sessionsData })
+        db.collection("basic-version").doc(game.nickname).set({ sessions: sessionsData })
         .then((docRef) => {
           console.log("Document written.");
         })
@@ -645,9 +655,10 @@ var game = {
           console.error("Error adding document: ", error);
         });
       } else {
-        db.collection("basic-version").doc(game.user).set({ sessions: [{
+        db.collection("basic-version").doc(game.nickname).set({ sessions: [{
           pageTimes: game.pageTimes,
-          levelTimes: game.levelTimes
+          levelTimes: game.levelTimes,
+          checks: game.checks
         }]})
         .then((docRef) => {
           console.log("Document written.");
