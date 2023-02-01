@@ -157,12 +157,12 @@ var game = {
     });
 
     $('#labelReset, #replay').on('click', function() {
-      $('#replay').hide();
       var warningReset = messages.warningReset[game.language] || messages.warningReset.en;
       var r = confirm(warningReset);
       game.saveToDatabase();
 
       if (r) {
+        $('#replay').hide();
         game.session++;
         game.pageStartTimes = {},
         game.pageEndTimes = {},
