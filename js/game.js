@@ -77,12 +77,7 @@ var game = {
     });
 
     $('#check').on('click', function() {
-      const level = levels[game.level]
-      if (game.checks[level.name]) {
-        game.checks[level.name] = game.checks[level.name] += 1;
-      } else {
-        game.checks[level.name] = 1;
-      }
+      game.countCheck();
       game.check();
       if ($('#next').hasClass('disabled')) {
         if (!$('.frog').hasClass('animated')) {
@@ -126,6 +121,7 @@ var game = {
     $('#code').on('keydown', function(e) {
       if (e.keyCode === 13) {
         if(!game.levelSolved()) {
+          game.countCheck();
           game.check();
         }
         if (e.ctrlKey || e.metaKey) {
@@ -276,6 +272,15 @@ var game = {
         history.replaceState({}, document.title, './');
       }
     });
+  },
+
+  countCheck: function() {
+    const level = levels[game.level]
+    if (game.checks[level.name]) {
+      game.checks[level.name] = game.checks[level.name] += 1;
+    } else {
+      game.checks[level.name] = 1;
+    }
   },
 
   prev: function() {
